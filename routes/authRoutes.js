@@ -16,14 +16,22 @@ router.post("/register", async (req, res) => {
         data: null,
       });
     }
+
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     req.body.password = hashedPassword;
     const newUser = new User(req.body);
     await newUser.save();
+
+    // Generate JWT token for the newly registered user
+    const token = jwt.sign({ userId: newUser._id }, process.env.jwt_secret, {
+      expiresIn: "1d",
+    });
+
     res.send({
       message: "User created successfully",
       success: true,
-      data: null,
+      token: token,
+      name: newUser.name,
     });
   } catch (error) {
     res.send({
@@ -33,7 +41,6 @@ router.post("/register", async (req, res) => {
     });
   }
 });
-
 // login user
 
 router.post("/login", async (req, res) => {
